@@ -142,7 +142,7 @@ static struct wcd9xxx_mbhc_config mbhc_cfg = {
 	.do_recalibration = true,
 	.use_vddio_meas = true,
 	.enable_anc_mic_detect = false,
-	.hw_jack_type = SIX_POLE_JACK,
+	.hw_jack_type = FOUR_POLE_JACK,
 };
 
 struct msm_auxpcm_gpio {
@@ -1575,6 +1575,7 @@ static bool msm8974_swap_gnd_mic(struct snd_soc_codec *codec)
 	int value = gpio_get_value_cansleep(pdata->us_euro_gpio);
 	pr_debug("%s: swap select switch %d to %d\n", __func__, value, !value);
 	gpio_set_value_cansleep(pdata->us_euro_gpio, !value);
+	msleep(50);
 	return true;
 }
 
@@ -1853,55 +1854,22 @@ void *def_taiko_mbhc_cal(void)
 	S(n_btn_meas, 1);
 	S(n_btn_con, 2);
 	S(num_btn, WCD9XXX_MBHC_DEF_BUTTONS);
-#ifdef CONFIG_MACH_OPPO
-	S(v_btn_press_delta_sta, 0);
-#else
 	S(v_btn_press_delta_sta, 100);
-#endif
 	S(v_btn_press_delta_cic, 50);
 #undef S
 	btn_cfg = WCD9XXX_MBHC_CAL_BTN_DET_PTR(taiko_cal);
 	btn_low = wcd9xxx_mbhc_cal_btn_det_mp(btn_cfg, MBHC_BTN_DET_V_BTN_LOW);
 	btn_high = wcd9xxx_mbhc_cal_btn_det_mp(btn_cfg,
 					       MBHC_BTN_DET_V_BTN_HIGH);
-#ifdef CONFIG_MACH_FIND7OP
+#ifdef CONFIG_MACH_OPPO
 	btn_low[0] = -70;
 	btn_high[0] = 50;
 	btn_low[1] = 51;
-	btn_high[1] = 52;
-	btn_low[2] = 53;
-	btn_high[2] = 54;
-	btn_low[3] = 55;
-	btn_high[3] = 263;
-	btn_low[4] = 264;
-	btn_high[4] = 265;
-	btn_low[5] = 266;
-	btn_high[5] = 267;
-	btn_low[6] = 268;
-	btn_high[6] = 269;
-	btn_low[7] = 270;
-	btn_high[7] = 600;
-#elif defined(CONFIG_MACH_FIND7)
-	btn_low[0] = -70;
-	btn_high[0] = 40;
-	btn_low[1] = 41;
-	btn_high[1] = 61;
-	btn_low[2] = 62;
-	btn_high[2] = 104;
-	btn_low[3] = 105;
-	btn_high[3] = 148;
-	btn_low[4] = 149;
-	btn_high[4] = 189;
-	btn_low[5] = 190;
-	btn_high[5] = 228;
-	btn_low[6] = 229;
-	btn_high[6] = 269;
-	btn_low[7] = 270;
-	btn_high[7] = 500;
 #else
 	btn_low[0] = -50;
 	btn_high[0] = 20;
 	btn_low[1] = 21;
+#endif
 	btn_high[1] = 61;
 	btn_low[2] = 62;
 	btn_high[2] = 104;
@@ -1914,6 +1882,9 @@ void *def_taiko_mbhc_cal(void)
 	btn_low[6] = 229;
 	btn_high[6] = 269;
 	btn_low[7] = 270;
+#ifdef CONFIG_MACH_OPPO
+	btn_high[7] = 600;
+#else
 	btn_high[7] = 500;
 #endif
 	n_ready = wcd9xxx_mbhc_cal_btn_det_mp(btn_cfg, MBHC_BTN_DET_N_READY);
@@ -2628,6 +2599,21 @@ static struct snd_soc_dai_link msm8974_common_dai_links[] = {
 		/* this dainlink has playback support */
 		.ignore_pmdown_time = 1,
 		.be_id = MSM_FRONTEND_DAI_MULTIMEDIA9,
+	},
+	{
+		.name = "VoWLAN",
+		.stream_name = "VoWLAN",
+		.cpu_dai_name   = "VoWLAN",
+		.platform_name  = "msm-pcm-voice",
+		.dynamic = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			    SND_SOC_DPCM_TRIGGER_POST},
+		.no_host_mode = SND_SOC_DAI_LINK_NO_HOST,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		.codec_dai_name = "snd-soc-dummy-dai",
+		.codec_name = "snd-soc-dummy",
+		.be_id = MSM_FRONTEND_DAI_VOWLAN,
 	},
 	/* Backend BT/FM DAI Links */
 	{

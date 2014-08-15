@@ -45,17 +45,6 @@ static DEFINE_MUTEX(mdss_mdp_ctl_lock);
 static int mdss_mdp_mixer_free(struct mdss_mdp_mixer *mixer);
 static inline int __mdss_mdp_ctl_get_mixer_off(struct mdss_mdp_mixer *mixer);
 
-static inline void mdp_mixer_write(struct mdss_mdp_mixer *mixer,
-				   u32 reg, u32 val)
-{
-	writel_relaxed(val, mixer->base + reg);
-}
-
-static inline u32 mdp_mixer_read(struct mdss_mdp_mixer *mixer, u32 reg)
-{
-	return readl_relaxed(mixer->base + reg);
-}
-
 static inline u32 mdss_mdp_get_pclk_rate(struct mdss_mdp_ctl *ctl)
 {
 	struct mdss_panel_info *pinfo = &ctl->panel_data->panel_info;
@@ -901,9 +890,9 @@ void mdss_mdp_ctl_perf_release_bw(struct mdss_mdp_ctl *ctl)
 	 * released.
 	 */
 	for (i = 0; i < mdata->nctl; i++) {
-		struct mdss_mdp_ctl *ctl = mdata->ctl_off + i;
+		struct mdss_mdp_ctl *ctl_local = mdata->ctl_off + i;
 
-		if (ctl->power_on && ctl->is_video_mode)
+		if (ctl_local->power_on && ctl_local->is_video_mode)
 			goto exit;
 	}
 
@@ -911,11 +900,19 @@ void mdss_mdp_ctl_perf_release_bw(struct mdss_mdp_ctl *ctl)
 	pr_debug("transaction_status=0x%x\n", transaction_status);
 
 	/*Release the bandwidth only if there are no transactions pending*/
-	if (!transaction_status) {
-		trace_mdp_cmd_release_bw(ctl->num);
-		ctl->cur_perf.bw_ctl = 0;
-		ctl->new_perf.bw_ctl = 0;
-		pr_debug("Release BW ctl=%d\n", ctl->num);
+	if (!transaction_status && mdata->enable_bw_release) {
+		/*
+		 * for splitdisplay if release_bw is called using secondary
+		 * then find the main ctl and release BW for main ctl because
+		 * BW is always calculated/stored using main ctl.
+		 */
+		struct mdss_mdp_ctl *ctl_local =
+			mdss_mdp_get_main_ctl(ctl) ? : ctl;
+
+		trace_mdp_cmd_release_bw(ctl_local->num);
+		ctl_local->cur_perf.bw_ctl = 0;
+		ctl_local->new_perf.bw_ctl = 0;
+		pr_debug("Release BW ctl=%d\n", ctl_local->num);
 		mdss_mdp_ctl_perf_update_bus(ctl);
 	}
 exit:
@@ -977,7 +974,8 @@ static void mdss_mdp_ctl_perf_update(struct mdss_mdp_ctl *ctl,
 	is_bw_released = !mdss_mdp_ctl_perf_get_transaction_status(ctl);
 
 	if (ctl->power_on) {
-		if (ctl->perf_release_ctl_bw)
+		if (ctl->perf_release_ctl_bw &&
+			mdata->enable_rotator_bw_release)
 			mdss_mdp_perf_release_ctl_bw(ctl, new);
 		else if (is_bw_released || params_changed)
 			mdss_mdp_perf_calc_ctl(ctl, new);
@@ -1870,13 +1868,12 @@ int mdss_mdp_ctl_start(struct mdss_mdp_ctl *ctl, bool handoff)
 				mdss_mdp_ctl_split_display_enable(1, ctl, sctl);
 		} else if (ctl->mixer_right) {
 			struct mdss_mdp_mixer *mixer = ctl->mixer_right;
-			u32 out, off;
+			u32 out;
 
 			mdss_mdp_pp_resume(ctl, mixer->num);
 			mixer->params_changed++;
 			out = (mixer->height << 16) | mixer->width;
-			off = MDSS_MDP_REG_LM_OFFSET(mixer->num);
-			MDSS_MDP_REG_WRITE(off + MDSS_MDP_REG_LM_OUT_SIZE, out);
+			mdp_mixer_write(mixer, MDSS_MDP_REG_LM_OUT_SIZE, out);
 			mdss_mdp_ctl_write(ctl, MDSS_MDP_REG_CTL_PACK_3D, 0);
 		}
 	}

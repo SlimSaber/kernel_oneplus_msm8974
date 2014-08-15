@@ -109,6 +109,7 @@ enum wcd9xx_mbhc_cs_enable_bits {
 	MBHC_CS_ENABLE_POLLING,
 	MBHC_CS_ENABLE_INSERTION,
 	MBHC_CS_ENABLE_REMOVAL,
+	MBHC_CS_ENABLE_DET_ANC,
 };
 
 enum wcd9xxx_mbhc_state {
@@ -284,6 +285,7 @@ struct wcd9xxx_mbhc_cb {
 	int (*enable_mb_source) (struct snd_soc_codec *, bool, bool);
 	void (*setup_int_rbias) (struct snd_soc_codec *, bool);
 	void (*pull_mb_to_vddio) (struct snd_soc_codec *, bool);
+	int (*enable_hpmic_switch) (struct snd_soc_codec *, bool);
 };
 
 struct wcd9xxx_mbhc {
@@ -362,14 +364,16 @@ struct wcd9xxx_mbhc {
 	u8   scaling_mux_in;
 	/* Holds codec specific interrupt mapping */
 	const struct wcd9xxx_mbhc_intr *intr_ids;
-#ifdef CONFIG_MACH_OPPO
-	bool is_hs_inserted;
-#endif
+
+	/* Indicates status of current source switch */
+	bool is_cs_enabled;
 
 #ifdef CONFIG_DEBUG_FS
 	struct dentry *debugfs_poke;
 	struct dentry *debugfs_mbhc;
 #endif
+
+	struct mutex mbhc_lock;
 };
 
 #define WCD9XXX_MBHC_CAL_SIZE(buttons, rload) ( \
