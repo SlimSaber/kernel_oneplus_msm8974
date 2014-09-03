@@ -195,7 +195,7 @@ static void cpufreq_interactive_timer_start(int cpu, int time_override)
 static unsigned int freq_to_above_hispeed_delay(unsigned int freq)
 {
 	int i;
-	unsigned int ret = 0;
+	unsigned int ret;
 	unsigned long flags;
 
 	spin_lock_irqsave(&above_hispeed_delay_lock, flags);
@@ -214,7 +214,7 @@ static unsigned int freq_to_above_hispeed_delay(unsigned int freq)
 static unsigned int freq_to_targetload(unsigned int freq)
 {
 	int i;
-	unsigned int ret = 0;
+	unsigned int ret;
 	unsigned long flags;
 
 	spin_lock_irqsave(&target_loads_lock, flags);
@@ -768,9 +768,9 @@ err:
 static ssize_t show_target_loads(
 	struct kobject *kobj, struct attribute *attr, char *buf)
 {
-	int i = 0;
+	int i;
 	ssize_t ret = 0;
-	unsigned long flags = 0;
+	unsigned long flags;
 
 	spin_lock_irqsave(&target_loads_lock, flags);
 
@@ -862,7 +862,7 @@ static ssize_t store_hispeed_freq(struct kobject *kobj,
 				  struct attribute *attr, const char *buf,
 				  size_t count)
 {
-	int ret = 0;
+	int ret;
 	long unsigned int val;
 
 	ret = strict_strtoul(buf, 0, &val);
@@ -885,7 +885,7 @@ static ssize_t store_sampling_down_factor(struct kobject *kobj,
 				struct attribute *attr, const char *buf,
 				size_t count)
 {
-	int ret = 0;
+	int ret;
 	long unsigned int val;
 
 	ret = strict_strtoul(buf, 0, &val);
@@ -908,7 +908,7 @@ static ssize_t show_go_hispeed_load(struct kobject *kobj,
 static ssize_t store_go_hispeed_load(struct kobject *kobj,
 			struct attribute *attr, const char *buf, size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = strict_strtoul(buf, 0, &val);
@@ -930,7 +930,7 @@ static ssize_t show_min_sample_time(struct kobject *kobj,
 static ssize_t store_min_sample_time(struct kobject *kobj,
 			struct attribute *attr, const char *buf, size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = strict_strtoul(buf, 0, &val);
@@ -952,7 +952,7 @@ static ssize_t show_timer_rate(struct kobject *kobj,
 static ssize_t store_timer_rate(struct kobject *kobj,
 			struct attribute *attr, const char *buf, size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = strict_strtoul(buf, 0, &val);
@@ -975,7 +975,7 @@ static ssize_t store_timer_slack(
 	struct kobject *kobj, struct attribute *attr, const char *buf,
 	size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = kstrtol(buf, 10, &val);
@@ -997,7 +997,7 @@ static ssize_t show_boost(struct kobject *kobj, struct attribute *attr,
 static ssize_t store_boost(struct kobject *kobj, struct attribute *attr,
 			   const char *buf, size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = kstrtoul(buf, 0, &val);
@@ -1022,7 +1022,7 @@ define_one_global_rw(boost);
 static ssize_t store_boostpulse(struct kobject *kobj, struct attribute *attr,
 				const char *buf, size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = kstrtoul(buf, 0, &val);
@@ -1048,7 +1048,7 @@ static ssize_t store_boostpulse_duration(
 	struct kobject *kobj, struct attribute *attr, const char *buf,
 	size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = kstrtoul(buf, 0, &val);
@@ -1070,7 +1070,7 @@ static ssize_t show_io_is_busy(struct kobject *kobj,
 static ssize_t store_io_is_busy(struct kobject *kobj,
 			struct attribute *attr, const char *buf, size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = kstrtoul(buf, 0, &val);
@@ -1092,7 +1092,7 @@ static ssize_t show_sync_freq(struct kobject *kobj,
 static ssize_t store_sync_freq(struct kobject *kobj,
 			struct attribute *attr, const char *buf, size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = kstrtoul(buf, 0, &val);
@@ -1114,7 +1114,7 @@ static ssize_t show_up_threshold_any_cpu_load(struct kobject *kobj,
 static ssize_t store_up_threshold_any_cpu_load(struct kobject *kobj,
 			struct attribute *attr, const char *buf, size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = kstrtoul(buf, 0, &val);
@@ -1138,7 +1138,7 @@ static ssize_t show_up_threshold_any_cpu_freq(struct kobject *kobj,
 static ssize_t store_up_threshold_any_cpu_freq(struct kobject *kobj,
 			struct attribute *attr, const char *buf, size_t count)
 {
-	int ret = 0;
+	int ret;
 	unsigned long val;
 
 	ret = kstrtoul(buf, 0, &val);
